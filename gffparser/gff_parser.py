@@ -7,6 +7,7 @@ Parser module for gff3 files (dev)
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
 import urllib  # TODO: python2/3 compatibility
+import sys
 
 from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
@@ -130,6 +131,17 @@ def decode(text: str) -> str:
     return urllib.parse.unquote(text, errors="strict")
 
 
+def build_attributes(section: str) -> Dict[str, str]:
+    attributes = {}
+    for attribute in section.split(";"):
+        if not attribute:
+            continue
+        parts = attribute.split("=")
+        assert len(parts) == 2, "Invalid attribute: %s" % attribute
+        attributes[parts[0]] = decode(parts[1])
+    return attributes
+
+
 def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, str]) -> Feature:
     parts = line.strip().split(sep="\t" if "\t" in line else None, maxsplit=9)
     assert len(parts) == 9, line
@@ -152,7 +164,7 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, str]
         strand = 0
 
     try:
-        attributes = {k: decode(v) for k, v in[(att.split("=")) for att in attribute_string.strip(";").split(";")]}
+        attributes = build_attributes(attribute_string)
     except:
         print("bad attributes line:", attribute_string, file=sys.stderr)
         raise
@@ -284,7 +296,7 @@ def parse_gff(filename: str, strict=False) -> Dict[str, Feature]:
 
             # track feature lines
             try:
-                attributes = {k: decode(v) for k, v in[(att.split("=")) for att in parts[8].strip(";").split(";")]}
+                attributes = build_attributes(parts[8])
             except:
                 print("bad attributes line:", parts[8], file=sys.stderr)
                 raise
@@ -367,7 +379,6 @@ def convert_gff_to_genbank(gff_records: List[GFFRecord]) -> List[SeqRecord]:
 
 
 if __name__ == "__main__":
-    import sys
     seq_records = convert_gff_to_genbank(parse_gff(sys.argv[1]))
 #    from helperlibs.bio import seqio
 #    with open("gff_to.gbk", "w") as handle:

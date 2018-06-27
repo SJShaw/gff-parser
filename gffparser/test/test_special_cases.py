@@ -8,6 +8,7 @@ import os
 import unittest
 
 from gffparser import parse_gff
+from gffparser import gff_parser
 
 
 class TestPartGenes(unittest.TestCase):
@@ -30,3 +31,19 @@ class TestDuplicates(unittest.TestCase):
             lines = handle.read().splitlines()
         assert len(record.all_features) == 2
         assert len(lines) == 4
+
+
+class TestAttributes(unittest.TestCase):
+    def test_repeated_separator(self):
+        attribute_section = "a=long thing;;B=7"
+        attributes = gff_parser.build_attributes(attribute_section)
+        assert attributes == {"a": "long thing", "B": "7"}
+
+    def test_extra_separator(self):
+        attribute_section = ";a=long thing;B=7"
+        attributes = gff_parser.build_attributes(attribute_section)
+        assert attributes == {"a": "long thing", "B": "7"}
+
+        attribute_section = "a=long thing;B=7;"
+        attributes = gff_parser.build_attributes(attribute_section)
+        assert attributes == {"a": "long thing", "B": "7"}
