@@ -1,0 +1,9 @@
+FNCA01000004.1	EMBL	region	1	321454	.	+	.	ID=id-1;Dbxref=taxon:38026;gbkey=Src;mol_type=genomic DNA;note=contig: Ga0073305_104;strain=PL 12/M
+FNCA01000004.1	EMBL	gene	130581	131342	.	-	.	ID=gene-SAMN04488589_1459;Name=SAMN04488589_1459;gbkey=Gene;gene_biotype=protein_coding;locus_tag=SAMN04488589_1459
+FNCA01000004.1	EMBL	CDS	130581	131342	.	-	0	ID=cds-SDF83133.1;Parent=gene-SAMN04488589_1459;Dbxref=NCBI_GP:SDF83133.1;Name=SDF83133.1;gbkey=CDS;product=two-component system%2C cell cycle response regulator;protein_id=SDF83133.1;transl_table=11
+FNCA01000004.1	EMBL	gene	131702	131740	.	-	.	Name=SAMN04488589_1460;gbkey=Gene;gene_biotype=tRNA;is_ordered=true;locus_tag=SAMN04488589_1460;part=1/2
+FNCA01000004.1	EMBL	gene	131546	131582	.	-	.	Name=SAMN04488589_1460;gbkey=Gene;gene_biotype=tRNA;is_ordered=true;locus_tag=SAMN04488589_1460;part=2/2
+FNCA01000004.1	EMBL	tRNA	131546	131740	.	-	.	ID=id-SAMN04488589_1460;Parent=gene-SAMN04488589_1460;gbkey=tRNA;product=tRNA-Trp
+FNCA01000004.1	EMBL	exon	131702	131740	.	-	.	ID=exon-id-SAMN04488589_1460-1;Parent=id-SAMN04488589_1460;gbkey=tRNA;product=tRNA-Trp
+FNCA01000004.1	EMBL	exon	131546	131582	.	-	.	ID=exon-id-SAMN04488589_1460-2;Parent=id-SAMN04488589_1460;gbkey=tRNA;product=tRNA-Trp
+
