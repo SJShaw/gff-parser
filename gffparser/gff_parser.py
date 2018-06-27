@@ -265,7 +265,7 @@ def parse_gff(filename: str, strict=False) -> Dict[str, Feature]:
         for line in handle:
             # TODO: keep sequences, ensure annotations don't follow
             if line.startswith(">"):
-                continue
+                break
             # skip comments
             if line.startswith("#"):
                 continue
