@@ -1,0 +1,4 @@
+seq1      FIG     CDS     355079  356368  .       +       2       ID=cds.1;Name=Dummy
+seq1      FIG     tRNA    847     920     .       +       .       ID=thing.rna.1;Name=tRNA-Met-CAT
+seq1      FIG     tRNA    847     920     .       +       .       ID=thing.rna.1;Name=tRNA-Met-CAT
+seq1      FIG     tRNA    847     920     .       +       .       ID=thing.rna.1;Name=tRNA-Met-CAT

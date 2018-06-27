@@ -9,13 +9,24 @@ import unittest
 
 from gffparser import parse_gff
 
+
 class TestPartGenes(unittest.TestCase):
+    @unittest.expectedFailure
     def test_NCBI(self):
         filepath = os.path.join("gffparser", "test", "data", "FNCA01000004.1.fragment.gff3")
-        print(os.getcwd() + "/" + filepath)
-        record = parse_gff(filepath)
+        record = parse_gff(filepath)[0]
         non_part = record.parent_features["gene-SAMN04488589_1459"]
         assert str(non_part.location) == ""
 
         part = record.parent_features["gene-SAMN04488589_1460"]
         assert str(part.location) == ""
+
+
+class TestDuplicates(unittest.TestCase):
+    def test_exact_duplicates(self):
+        filepath = os.path.join("gffparser", "test", "data", "duplicate_lines.gff3")
+        record = parse_gff(filepath)[0]
+        with open(filepath) as handle:
+            lines = handle.read().splitlines()
+        assert len(record.all_features) == 2
+        assert len(lines) == 4
