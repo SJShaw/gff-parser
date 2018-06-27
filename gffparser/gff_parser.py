@@ -212,18 +212,18 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, str]
         elif gff_type == "CDS":
             if parent:  # not all GFF files will specify genes at all
                 assert isinstance(parent, (Gene, RNA)), str(parent)
-            if parent in record.cds_features_by_parent:
+            # merge if no ID and shared gene parent
+            if "ID" not in attributes and parent in record.cds_features_by_parent:
                 cds = record.cds_features_by_parent[parent]
                 cds.location = cds.location + location
                 # TODO: manage attribute merging/changes
                 return cds
-            else:
-                cds = CDS(location, parent, attributes)
-                record.cds_features_by_parent[parent] = cds
-                if parent:
-                    parent.add_cds(cds)
-                feature = cds
-                record.cds_features.append(cds)
+            cds = CDS(location, parent, attributes)
+            record.cds_features_by_parent[parent] = cds
+            if parent:
+                parent.add_cds(cds)
+            feature = cds
+            record.cds_features.append(cds)
     else:
         generic = Feature(location, gff_type, attributes, parent=parent)
         feature = generic
