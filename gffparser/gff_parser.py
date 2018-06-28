@@ -193,8 +193,8 @@ def interpret_strand(strand: str, strict: bool = False) -> int:
 
 
 def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, str]) -> Feature:
-    parts = line.strip().split(sep="\t" if "\t" in line else None, maxsplit=9)
-    assert len(parts) == 9, line
+    parts = line.strip().split(sep="\t" if "\t" in line else None, maxsplit=8)
+    assert len(parts) == 9, parts
 
     try:
         seqid, _, gff_type, start, end, _, strand_dir, _, attribute_string = parts
@@ -330,8 +330,8 @@ def parse_gff(filename: str, strict=False) -> Dict[str, Feature]:
             if not line.strip():
                 continue
 
-            parts = line.strip().split(sep="\t" if "\t" in line else None, maxsplit=9)
-            assert len(parts) == 9, line
+            parts = line.strip().split(sep="\t" if "\t" in line else None, maxsplit=8)
+            assert len(parts) == 9, parts
             seqid = parts[0]
             # construct a record skeleton
             if seqid not in records_by_name:
