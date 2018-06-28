@@ -142,6 +142,26 @@ def build_attributes(section: str) -> Dict[str, str]:
     return attributes
 
 
+def interpret_strand(strand: str, strict: bool = False) -> int:
+    possibilities = {
+        "+": 1,
+        "-": -1,
+        ".": 0,
+    }
+    fallbacks = {
+        "+1": 1,
+        "1": 1,
+        "-1": -1,
+        "0": 0,
+    }
+    result = possibilities.get(strand)
+    if result is None and not strict:
+        result = fallbacks.get(strand)
+    if result is None:
+        raise ValueError("Unknown strand representation: %s" % strand)
+    return result
+
+
 def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, str]) -> Feature:
     parts = line.strip().split(sep="\t" if "\t" in line else None, maxsplit=9)
     assert len(parts) == 9, line
@@ -156,12 +176,7 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, str]
 
     assert seqid == record.name
 
-    if strand_dir == "+":
-        strand = 1
-    elif strand_dir == "-":
-        strand = -1
-    else:
-        strand = 0
+    strand = interpret_strand(strand_dir)
 
     try:
         attributes = build_attributes(attribute_string)

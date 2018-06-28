@@ -11,6 +11,7 @@ from Bio.SeqFeature import FeatureLocation, CompoundLocation
 
 from gffparser import parse_gff
 
+
 class TestParentLinking(unittest.TestCase):
     def test_simple(self):
         filepath = os.path.join("gffparser", "test", "data", "simple_parent.gff3")
@@ -25,6 +26,7 @@ class TestParentLinking(unittest.TestCase):
         gene = record.parent_features["gene"]
         cds = record.cds_features[0]
         assert cds.parent == gene
+
 
 class TestCDSMerging(unittest.TestCase):
     def test_distinct(self):
