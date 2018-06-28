@@ -5,7 +5,7 @@ Parser module for gff3 files (dev)
 """
 
 from collections import defaultdict
-from typing import Dict, List, Optional, Union
+from typing import Dict, Iterator, List, Optional, Union
 import urllib  # TODO: python2/3 compatibility
 import sys
 
@@ -13,6 +13,9 @@ from Bio.Alphabet import generic_dna
 from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation, SeqFeature, BeforePosition, AfterPosition, ExactPosition
 from Bio.SeqRecord import SeqRecord
+
+
+ATTRIBUTE_SEPARATOR = ";"
 
 
 class Feature:
@@ -132,8 +135,35 @@ def decode(text: str) -> str:
 
 
 def build_attributes(section: str) -> Dict[str, str]:
+    def separate_attributes(text: str) -> Iterator[str]:
+        in_quoted_section = False
+        separator_in_unclosed_quote = False
+        current = []
+        for char in text:
+            if in_quoted_section:
+                if char == '"':
+                    in_quoted_section = False
+                    separator_in_unclosed_quote = False
+                    continue
+                elif char == ATTRIBUTE_SEPARATOR:
+                    separator_in_unclosed_quote = True
+            elif char == ATTRIBUTE_SEPARATOR:
+                yield "".join(current)
+                current = []
+                continue
+            # catch a value with a leading, but unclosed, quote marker
+            elif char == '"' and current and current[-1] == "=":
+                in_quoted_section = True
+                continue
+            current.append(char)
+        # no text remaining, so quoted sections will never close
+        if in_quoted_section and separator_in_unclosed_quote:
+            raise ValueError("Attribute with unclosed quote contains an attribute separator:"
+                             " %s" % ("".join(current)))
+        yield "".join(current)
+
     attributes = {}
-    for attribute in section.split(";"):
+    for attribute in separate_attributes(section):
         if not attribute:
             continue
         parts = attribute.split("=")

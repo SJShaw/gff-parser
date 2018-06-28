@@ -34,16 +34,31 @@ class TestDuplicates(unittest.TestCase):
 
 
 class TestAttributes(unittest.TestCase):
+    def build(self, text):
+        return gff_parser.build_attributes(text)
+
     def test_repeated_separator(self):
-        attribute_section = "a=long thing;;B=7"
-        attributes = gff_parser.build_attributes(attribute_section)
+        attributes = self.build("a=long thing;;B=7")
         assert attributes == {"a": "long thing", "B": "7"}
 
     def test_extra_separator(self):
-        attribute_section = ";a=long thing;B=7"
-        attributes = gff_parser.build_attributes(attribute_section)
+        attributes = self.build(";a=long thing;B=7")
         assert attributes == {"a": "long thing", "B": "7"}
 
-        attribute_section = "a=long thing;B=7;"
-        attributes = gff_parser.build_attributes(attribute_section)
+        attributes = self.build("a=long thing;B=7;")
         assert attributes == {"a": "long thing", "B": "7"}
+
+    def test_quoted_separators(self):
+        attributes = self.build('a="two; sections";b=one " section')
+        assert attributes == {"a": "two; sections", "b": 'one " section'}
+
+        attributes = self.build('a="two; sections";b=one " section')
+        assert attributes == {"a": "two; sections", "b": 'one " section'}
+
+        attributes = self.build('weird "key=normal value')
+        assert attributes == {'weird "key': "normal value"}
+
+        with self.assertRaisesRegex(ValueError, "unclosed quote contains an attribute separator"):
+            self.build('bad="missing; close')
+        with self.assertRaisesRegex(ValueError, "unclosed quote contains an attribute separator"):
+            self.build('a="missing close;b=good value')
