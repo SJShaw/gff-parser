@@ -7,15 +7,23 @@
 import os
 import unittest
 
-from gffparser import parse_gff
+from Bio.SeqFeature import CompoundLocation
+
 from gffparser import gff_parser
+
+
+def get_path_of_file(filename):
+    return os.path.join("gffparser", "test", "data", filename)
+
+
+def records_from_local_file(filename):
+    return gff_parser.parse_gff(get_path_of_file(filename))
 
 
 class TestPartGenes(unittest.TestCase):
     @unittest.expectedFailure
     def test_NCBI(self):
-        filepath = os.path.join("gffparser", "test", "data", "FNCA01000004.1.fragment.gff3")
-        record = parse_gff(filepath)[0]
+        record = records_from_local_file("FNCA01000004.1.fragment.gff3")[0]
         non_part = record.parent_features["gene-SAMN04488589_1459"]
         assert str(non_part.location) == ""
 
@@ -25,12 +33,18 @@ class TestPartGenes(unittest.TestCase):
 
 class TestDuplicates(unittest.TestCase):
     def test_exact_duplicates(self):
-        filepath = os.path.join("gffparser", "test", "data", "duplicate_lines.gff3")
-        record = parse_gff(filepath)[0]
-        with open(filepath) as handle:
+        filename = "duplicate_lines.gff3"
+        record = records_from_local_file(filename)[0]
+        with open(get_path_of_file(filename)) as handle:
             lines = handle.read().splitlines()
         assert len(record.all_features) == 2
         assert len(lines) == 4
+
+    @unittest.expectedFailure
+    def test_cds_merging(self):
+        record = records_from_local_file("cds_sharing_ids.gff3")[0]
+        assert len(record.cds_features) == 1
+        assert isinstance(record.cds_features[0].location, CompoundLocation)
 
 
 class TestAttributes(unittest.TestCase):
