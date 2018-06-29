@@ -21,14 +21,13 @@ def records_from_local_file(filename):
 
 
 class TestPartGenes(unittest.TestCase):
-    @unittest.expectedFailure
     def test_NCBI(self):
         record = records_from_local_file("FNCA01000004.1.fragment.gff3")[0]
         non_part = record.parent_features["gene-SAMN04488589_1459"]
-        assert str(non_part.location) == ""
+        assert str(non_part.location) == "[130580:131342](-)"
 
         part = record.parent_features["gene-SAMN04488589_1460"]
-        assert str(part.location) == ""
+        assert str(part.location) == "join{[131545:131582](-), [131701:131740](-)}"
 
 
 class TestDuplicates(unittest.TestCase):
@@ -40,7 +39,6 @@ class TestDuplicates(unittest.TestCase):
         assert len(record.all_features) == 2
         assert len(lines) == 4
 
-    @unittest.expectedFailure
     def test_cds_merging(self):
         record = records_from_local_file("cds_sharing_ids.gff3")[0]
         assert len(record.cds_features) == 1
