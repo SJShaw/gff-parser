@@ -74,3 +74,13 @@ class TestAttributes(unittest.TestCase):
             self.build('bad="missing; close')
         with self.assertRaisesRegex(ValueError, "unclosed quote contains an attribute separator"):
             self.build('a="missing close;b=good value')
+
+class TestParentIsID(unittest.TestCase):
+    def test_mrna_and_gene(self):
+        record = records_from_local_file("gene_mrna_same_id.gff3")[0]
+        assert len(record.all_features) == 2
+        gene = record.all_features[0]
+        assert gene.gff_type == "gene"
+        cds = record.all_features[1]
+        assert cds.gff_type == "CDS"
+        assert cds.parent == gene

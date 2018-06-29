@@ -1,0 +1,4 @@
+seq1   Glimmer3        gene    55     70     .       -       .       ID=Gene_0001;Name=Gene_0001;
+seq1   Glimmer3        mRNA    55     70     .       -       .       ID=Gene_0001;Name=Gene_0001;Parent=Gene_0001;
+seq1   Glimmer3        CDS     55     70     .       -       0       Parent=Gene_0001;
+

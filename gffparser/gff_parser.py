@@ -290,21 +290,20 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, List
     # if others exist with the same id, merge them here
     if same_id:
         other = construct_feature(record, same_id[0], parent_lines, same_id[1:])
-        assert other is not None
+        if other is not None:
+            if gff_type != other.gff_type:
+                raise ValueError("Two features of different types share the same ID"
+                                 ": %s  %s" % (other, line))
+            if other.location == location:
+                raise ValueError("Two features with the same location")
 
-        if gff_type != other.gff_type:
-            raise ValueError("Two features of different types share the same ID"
-                             ": %s  %s" % (other, line))
-        if other.location == location:
-            raise ValueError("Two features with the same location")
+            if other.location != location:
+                other.location = other.location + location  # TODO obey the is_ordered=true attribute
+                assert isinstance(other.location, CompoundLocation)
 
-        if other.location != location:
-            other.location = other.location + location  # TODO obey the is_ordered=true attribute
-            assert isinstance(other.location, CompoundLocation)
+            # TODO: attribute merging
 
-        # TODO: attribute merging
-
-        return other
+            return other
 
     # since all the same IDs have been processed if they exist, constructing new
     # features should only happen if they have no ID or the ID doesn't exist yet
