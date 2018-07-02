@@ -450,7 +450,6 @@ def parse_gff(filename: str, strict: bool = False) -> List[GFFRecord]:
     for record_name, record in records_by_name.items():
         populate_record(record, named_by_record[record_name], anon_by_record[record_name], strict=strict)
 
-    print("parsed %d records" % len(records_by_name))  # TODO: remove
     return list(records_by_name.values())
 
 
@@ -510,6 +509,7 @@ def convert_gff_to_genbank(gff_records: List[GFFRecord]) -> List[SeqRecord]:
 
 if __name__ == "__main__":
     seq_records = convert_gff_to_genbank(parse_gff(sys.argv[1]))
+    print("parsed %d records" % len(seq_records))
 #    from helperlibs.bio import seqio
 #    with open("gff_to.gbk", "w") as handle:
 #        seqio.write(seq_records, handle, "genbank")
