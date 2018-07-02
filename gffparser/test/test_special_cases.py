@@ -44,6 +44,10 @@ class TestDuplicates(unittest.TestCase):
         assert len(record.cds_features) == 1
         assert isinstance(record.cds_features[0].location, CompoundLocation)
 
+    def test_too_many_shared_ids(self):
+        with self.assertRaisesRegex(ValueError, "Too many features with the same ID"):
+            records_from_local_file("all_genes_same_id.gff3")[0]
+
 
 class TestAttributes(unittest.TestCase):
     def build(self, text):

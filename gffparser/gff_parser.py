@@ -428,8 +428,12 @@ def parse_gff(filename: str, strict: bool = False) -> List[GFFRecord]:
                     raise ValueError("File contains features with duplicated IDs:"
                                      " %s" % attributes["ID"])
                 # skip exact duplicates
-                if line not in named_by_record[seqid][attributes["ID"]]:
-                    named_by_record[seqid][attributes["ID"]].append(line)
+                existing = named_by_record[seqid][attributes["ID"]]
+                if line not in existing:
+                    existing.append(line)
+                    max_shared = 10
+                    if len(existing) >= max_shared:
+                        raise ValueError("Too many features with the same ID (>=%d)" % max_shared)
             else:
                 anon_by_record[seqid].append(line)
 
