@@ -1,0 +1,6 @@
+seq1	EMBL	region	1	321454	.	+	.	ID=id-1
+seq1	EMBL	gene	130581	131342	.	-	.	ID=gene;some score=-5;
+seq1	EMBL	CDS	130581	131342	.	-	0	Parent=gene
+seq2	EMBL	region	1	321454	.	+	.	ID=id-1
+seq2	EMBL	gene	130581	131342	.	-	.	ID=gene
+seq2	EMBL	CDS	130581	131342	.	-	0	Parent=gene;some score=-5;

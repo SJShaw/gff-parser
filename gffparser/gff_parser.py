@@ -499,7 +499,7 @@ def convert_record_to_biopython(gff_record: GFFRecord) -> SeqRecord:
     return seq_record
 
 
-def convert_gff_to_genbank(gff_records: List[GFFRecord]) -> List[SeqRecord]:
+def convert_gff_to_biopython(gff_records: List[GFFRecord]) -> List[SeqRecord]:
     """ Converts a list of GFFRecord to a list of SeqRecord """
     seq_records = []
     for gff_record in gff_records:
@@ -508,7 +508,7 @@ def convert_gff_to_genbank(gff_records: List[GFFRecord]) -> List[SeqRecord]:
 
 
 if __name__ == "__main__":
-    seq_records = convert_gff_to_genbank(parse_gff(sys.argv[1]))
+    seq_records = convert_gff_to_biopython(parse_gff(sys.argv[1]))
     print("parsed %d records" % len(seq_records))
 #    from helperlibs.bio import seqio
 #    with open("gff_to.gbk", "w") as handle:
