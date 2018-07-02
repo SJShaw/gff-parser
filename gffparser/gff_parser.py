@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """ Parser for GFF3 files, also has the capability to convert a parsed file to
     Genbank via a BioPython SeqRecord
@@ -6,7 +6,7 @@
 
 from collections import defaultdict
 from typing import Dict, Iterator, List, Optional, Union
-import urllib  # TODO: python2/3 compatibility
+import urllib
 import sys
 
 from Bio.Alphabet import generic_dna
