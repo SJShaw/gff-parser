@@ -95,7 +95,7 @@ class RNA(Feature):
         self.cdss = []  # type: List[CDS]
 
         if parent:
-            assert isinstance(parent, Gene), type(parent)
+            assert isinstance(parent, Feature), type(parent)
 
     def add_cds(self, cds: "CDS") -> None:
         """ Adds CDS children to the RNA object """
@@ -315,14 +315,17 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, List
         gene = Gene(location, gff_type, attributes)
         feature = gene
     elif gff_type in ["mRNA", "rRNA", "tRNA"]:
-        if parent is not None:
-            assert isinstance(parent, Gene), str(parent)
+        if parent is not None:  # not all GFF files will specify genes
+            # some files don't use 'gene', but variants of 'RNA_gene'
+            assert isinstance(parent, Feature), str(parent)
         rna = RNA(location, gff_type, parent, attributes)
         feature = rna
-        if parent:
+        if isinstance(parent, Gene):
             parent.add_rna(rna)
+        elif isinstance(parent, Feature):
+            parent.add_generic(rna)
     elif gff_type == "CDS":
-        if parent:  # not all GFF files will specify genes at all
+        if parent:  # not all GFF files will specify genes or mRNA
             assert isinstance(parent, (Gene, RNA)), str(parent)
         # merge if no ID and shared gene parent
         if "ID" not in attributes and parent in record.cds_features_by_parent:
