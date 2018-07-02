@@ -21,11 +21,11 @@ class TestStrand(unittest.TestCase):
     def test_extra(self):
         for strand in TestStrand.KNOWN_EXTRA:
             assert gff_parser.interpret_strand(strand, strict=False) in {-1, 0, 1}
-            with self.assertRaisesRegex(ValueError, "Unknown strand"):
+            with self.assertRaisesRegex(gff_parser.GFFParseError, "Unknown strand"):
                 gff_parser.interpret_strand(strand, strict=True)
 
     def test_other(self):
         for strict in [True, False]:
             for strand in [-1, 'x', None]:
-                with self.assertRaisesRegex(ValueError, "Unknown strand"):
+                with self.assertRaisesRegex(gff_parser.GFFParseError, "Unknown strand"):
                     gff_parser.interpret_strand(strand, strict=strict)

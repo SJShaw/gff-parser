@@ -25,6 +25,12 @@ from Bio.SeqRecord import SeqRecord
 ATTRIBUTE_SEPARATOR = ";"
 
 
+class GFFParseError(Exception):
+    """ A specific error for distinguishing input error from programmatic errors
+    """
+    pass
+
+
 class Feature:
     """ A generic GFF feature """
     def __init__(self, location: FeatureLocation, gff_type: str,
@@ -94,8 +100,8 @@ class RNA(Feature):
         self.name = self.attributes.pop("Name", None) or (parent.name if parent else None)
         self.cdss = []  # type: List[CDS]
 
-        if parent:
-            assert isinstance(parent, Feature), type(parent)
+        if parent is not None and not isinstance(parent, Feature):
+            raise TypeError("Unknown parent type: %s" % parent)
 
     def add_cds(self, cds: "CDS") -> None:
         """ Adds CDS children to the RNA object """
@@ -109,9 +115,10 @@ class CDS(Feature):
     """
     def __init__(self, location: FeatureLocation, parent: Union[Gene, RNA], attributes: Dict[str, str]) -> None:
         super().__init__(location, "CDS", attributes)
-        if parent is not None:
-            assert isinstance(parent, (RNA, Gene)), "Unknown parent type: %s" % parent
-        assert location.strand in [-1, 1], "Invalid CDS strand"
+        if parent is not None and not isinstance(parent, (RNA, Gene)):
+            raise TypeError("Unknown parent type: %s" % parent)
+        if location.strand not in [-1, 1]:
+            raise ValueError("Invalid CDS strand: %s" % location.strand)
         self.parent = parent
 
 
@@ -159,8 +166,8 @@ def build_attributes(section: str) -> Dict[str, str]:
             current.append(char)
         # no text remaining, so quoted sections will never close
         if in_quoted_section and separator_in_unclosed_quote:
-            raise ValueError("Attribute with unclosed quote contains an attribute separator:"
-                             " %s" % ("".join(current)))
+            raise GFFParseError("Attribute with unclosed quote contains an attribute separator:"
+                                " %s" % ("".join(current)))
         yield "".join(current)
 
     attributes = {}
@@ -168,7 +175,8 @@ def build_attributes(section: str) -> Dict[str, str]:
         if not attribute:
             continue
         parts = attribute.split("=")
-        assert len(parts) == 2, "Invalid attribute: %s" % attribute
+        if len(parts) != 2:
+            raise GFFParseError("Invalid attribute: %s" % attribute)
         attributes[parts[0]] = decode(parts[1])
     return attributes
 
@@ -191,7 +199,7 @@ def interpret_strand(strand: str, strict: bool = False) -> int:
     if result is None and not strict:
         result = fallbacks.get(strand)
     if result is None:
-        raise ValueError("Unknown strand representation: %s" % strand)
+        raise GFFParseError("Unknown strand representation: %s" % strand)
     return result
 
 
@@ -206,10 +214,10 @@ def construct_location(raw_start: str, raw_end: str, raw_strand: str,
         start = ExactPosition(int(raw_start) - 1)  # 0-indexed as FeatureLocation expects
         end = ExactPosition(int(raw_end))
     except ValueError as err:
-        raise ValueError("Invalid location values: %s" % str(err))
+        raise GFFParseError("Invalid location values: %s" % str(err))
 
     if start < 0 or end < 0:
-        raise ValueError("Location values cannot be negative")
+        raise GFFParseError("Invalid location values: %s, %s" % (raw_start, raw_end))
 
     strand = interpret_strand(raw_strand, strict=strict)
 
@@ -242,7 +250,8 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, List
     """
     parts = line.strip().split(sep="\t" if "\t" in line else None, maxsplit=8)
     parts = [part.strip() for part in parts]
-    assert len(parts) == 9, parts
+    if len(parts) != 9:
+        raise GFFParseError("Line does not contain 9 columns: %s" % line)
 
     seqid, _, gff_type, start, end, _, strand_dir, _, attribute_string = parts
 
@@ -256,7 +265,7 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, List
     # ensure any specified parent exists
     parent_name = attributes.pop("Parent", None)
     if parent_name is not None and parent_name not in parent_lines:
-        raise ValueError("Parent feature referenced but is not known: %s" % parent_name)
+        raise GFFParseError("Parent feature referenced but is not known: %s" % parent_name)
 
     # Some software inserts genes and mRNA with the same ID, but with the mRNA
     # having that same ID as a parent. Discard if discovered.
@@ -268,7 +277,7 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, List
     part = attributes.pop("part", None)
     if not attributes.get("ID") and part:
         if not attributes.get("Name"):
-            raise ValueError("Feature specified as part but has no reference: %s" % line)
+            raise GFFParseError("Feature specified as part but has no reference: %s" % line)
         attributes["ID"] = "%s-%s" % (gff_type, attributes["Name"])
 
     # ensure the parent feature has been constructed
@@ -292,10 +301,10 @@ def construct_feature(record: GFFRecord, line: str, parent_lines: Dict[str, List
         other = construct_feature(record, same_id[0], parent_lines, same_id[1:])
         if other is not None:
             if gff_type != other.gff_type:
-                raise ValueError("Two features of different types share the same ID"
-                                 ": %s  %s" % (other, line))
+                raise GFFParseError("Two features of different types share the same ID"
+                                    ": %s  %s" % (other, line))
             if other.location == location:
-                raise ValueError("Two features with the same location")
+                raise GFFParseError("Two features with the same location")
 
             if other.location != location:
                 other.location = other.location + location  # TODO obey the is_ordered=true attribute
@@ -419,21 +428,21 @@ def parse_gff(filename: str, strict: bool = False) -> List[GFFRecord]:
             part = attributes.pop("part", None)
             if not attributes.get("ID") and part:
                 if not attributes.get("Name"):
-                    raise ValueError("Feature specified as part but has no reference")
+                    raise GFFParseError("Feature specified as part but has no reference")
                 gff_type = parts[2]
                 attributes["ID"] = "%s-%s" % (gff_type, attributes["Name"])
 
             if "ID" in attributes:
                 if strict and named_by_record[seqid][attributes["ID"]]:
-                    raise ValueError("File contains features with duplicated IDs:"
-                                     " %s" % attributes["ID"])
+                    raise GFFParseError("File contains features with duplicated IDs:"
+                                        " %s" % attributes["ID"])
                 # skip exact duplicates
                 existing = named_by_record[seqid][attributes["ID"]]
                 if line not in existing:
                     existing.append(line)
                     max_shared = 10
                     if len(existing) >= max_shared:
-                        raise ValueError("Too many features with the same ID (>=%d)" % max_shared)
+                        raise GFFParseError("Too many features with the same ID (>=%d)" % max_shared)
             else:
                 anon_by_record[seqid].append(line)
 
@@ -441,7 +450,7 @@ def parse_gff(filename: str, strict: bool = False) -> List[GFFRecord]:
     for record_name, record in records_by_name.items():
         populate_record(record, named_by_record[record_name], anon_by_record[record_name], strict=strict)
 
-    print("parsed %d records" % len(records_by_name))
+    print("parsed %d records" % len(records_by_name))  # TODO: remove
     return list(records_by_name.values())
 
 
